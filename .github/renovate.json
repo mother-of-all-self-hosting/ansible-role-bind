@@ -15,6 +15,10 @@
       "automergeType": "branch",
       "schedule": ["* 0-6 1 * *"],
       "automergeSchedule": ["* 0-6 1 * *"]
+    },
+    {
+      "matchDepNames": ["bind"],
+      "allowedVersions": "/^\\d+\\.\\d*[02468](\\..+)?$/"
     }
   ],
   "customManagers": [

@@ -469,7 +469,7 @@ bind_config_additional_configuration: ''
 
 # Odd-numbered versions are development versions. We stick to stable.
 # Ref: https://kb.isc.org/docs/aa-01540
-# renovate: datasource=docker depName=docker.io/internetsystemsconsortium/bind9 versioning=semver allowedVersions=/^[0-9]*[02468]\./
+# renovate: datasource=docker depName=bind packageName=docker.io/internetsystemsconsortium/bind9 versioning=semver
 bind_version: "9.20"
 
 # These match the `bind` user and group in the container.
