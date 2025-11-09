@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2024 Slavi Pantaleev
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+- name: Perform BIND installation tasks
+  when: bind_enabled | bool
+  tags:
+    - setup-all
+    - setup-bind
+    - install-all
+    - install-bind
+  block:
+    - name: Validate BIND configuration
+      ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate_config.yml"
+    - name: Install BIND
+      ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
+
+- name: Perform BIND uninstallation tasks
+  when: not bind_enabled | bool
+  tags:
+    - setup-all
+    - setup-bind
+  block:
+    - name: Uninstall BIND
+      ansible.builtin.include_tasks: "{{ role_path }}/tasks/uninstall.yml"

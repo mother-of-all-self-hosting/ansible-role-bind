@@ -1,0 +1,24 @@
+#!/bin/bash
+# SPDX-FileCopyrightText: 2025 Slavi Pantaleev
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+set -euo pipefail
+
+{% if not bind_config_key_default_rndc_enabled %}
+echo "Error: RNDC is not enabled for this BIND installation." >&2
+echo "Please set bind_config_key_default_rndc_enabled to true in your configuration." >&2
+exit 1
+{% else %}
+
+# Check if running in an interactive terminal
+if [ -t 0 ] && [ -t 1 ]; then
+    interactive_flag="-it"
+else
+    interactive_flag=""
+fi
+
+# Execute rndc in the container
+exec {{ devture_systemd_docker_base_host_command_docker }} exec ${interactive_flag} {{ bind_identifier }} \
+    rndc -s 127.0.0.1 -p {{ bind_container_rndc_port }} -k /etc/bind/named-key.conf -y {{ bind_config_key_default_rndc_name }} "$@"
+{% endif %}

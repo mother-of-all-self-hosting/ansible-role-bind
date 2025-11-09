@@ -1,0 +1,35 @@
+#jinja2: lstrip_blocks: True
+{% for zone_name, zone_config in bind_config_zones.items() %}
+zone "{{ zone_name }}"{% if zone_config.class | default('') %} {{ zone_config.class }}{% endif %} {
+	type {{ zone_config.type }};
+	{% if zone_config.file | default('') %}
+	file "{{ zone_config.file }}";
+	{% endif %}
+	{% if zone_config.notify is defined %}
+	notify {{ zone_config.notify if zone_config.notify is string else ('yes' if zone_config.notify else 'no') }};
+	{% endif %}
+	{% if zone_config['also-notify'] | default([]) | length > 0 %}
+	also-notify {
+		{% for notify in zone_config['also-notify'] %}
+		{{ notify }};
+		{% endfor %}
+	};
+	{% endif %}
+	{% if zone_config['masterfile-format'] | default('') %}
+	masterfile-format {{ zone_config['masterfile-format'] }};
+	{% endif %}
+	{% if zone_config.primaries | default([]) | length > 0 %}
+	primaries {
+		{% for primary in zone_config.primaries %}
+		{{ primary }};
+		{% endfor %}
+	};
+	{% endif %}
+	{% if zone_config._additional_configuration | default('') %}
+	{{ zone_config._additional_configuration }}
+	{% endif %}
+};
+
+{% endfor %}
+
+{{ bind_config_zones_additional_configuration }}

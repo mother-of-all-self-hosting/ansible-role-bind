@@ -1,0 +1,16 @@
+#jinja2: lstrip_blocks: True
+include "/etc/bind/named-acl.conf";
+
+include "/etc/bind/named-controls.conf";
+
+include "/etc/bind/named-key.conf";
+
+{% if bind_config_logging_enabled %}
+include "/etc/bind/named-logging.conf";
+{% endif %}
+
+include "/etc/bind/named-options.conf";
+
+include "/etc/bind/named-zone.conf";
+
+{{ bind_config_additional_configuration }}

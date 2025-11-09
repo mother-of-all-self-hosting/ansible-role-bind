@@ -1,0 +1,16 @@
+#jinja2: lstrip_blocks: True
+{% if (bind_config_controls_inet | length) > 0 %}
+controls {
+	{% for inet in bind_config_controls_inet %}
+	inet {{ inet.address }} port {{ inet.port }}{% if inet.allow | default([]) | length > 0 %} allow {
+		{% for item in inet.allow %}
+		{{ item }};
+		{% endfor %}
+	}{% endif %}{% if inet['keys'] | default([]) | length > 0 %} keys {
+		{% for key in inet['keys'] %}
+		"{{ key }}";
+		{% endfor %}
+	}{% endif %} read-only {{ 'true' if inet.read_only | default(false) else 'false' }};
+	{% endfor %}
+};
+{% endif %}

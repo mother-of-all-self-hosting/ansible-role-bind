@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2023 - 2025 Slavi Pantaleev
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+
+- name: Fail if required BIND settings not defined
+  ansible.builtin.fail:
+    msg: >-
+      You need to define a required configuration setting (`{{ item.name }}`).
+  when: "item.when | bool and lookup('vars', item.name, default='') | string | length == 0"
+  with_items:
+    - {name: "bind_identifier", when: true}
+    - {name: "bind_uid", when: true}
+    - {name: "bind_gid", when: true}
+    - {name: "bind_container_network", when: true}
+    - {name: "bind_config_key_default_rndc_secret_raw", when: "{{ bind_config_key_default_rndc_enabled }}"}
+    - {name: "bind_config_options_dot_listen_on_tls_name", when: "{{ bind_config_options_dot_listen_on_enabled }}"}
+    - {name: "bind_config_options_dot_listen_on_v6_tls_name", when: "{{ bind_config_options_dot_listen_on_v6_enabled }}"}
+    - {name: "bind_config_options_doh_listen_on_tls_name", when: "{{ bind_config_options_doh_listen_on_enabled }}"}
+    - {name: "bind_config_options_doh_listen_on_v6_tls_name", when: "{{ bind_config_options_doh_listen_on_v6_enabled }}"}

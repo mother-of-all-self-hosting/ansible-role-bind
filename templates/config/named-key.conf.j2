@@ -1,0 +1,7 @@
+#jinja2: lstrip_blocks: True
+{% for key_name, key_config in bind_config_key.items() %}
+key {{ key_name }} {
+	algorithm {{ key_config.algorithm }};
+	secret "{{ key_config.secret }}";
+};
+{% endfor %}

@@ -1,0 +1,196 @@
+#jinja2: lstrip_blocks: True
+options {
+	directory "{{ bind_config_options_directory }}";
+
+	{% if bind_config_options_dns_listen_on_addresses | length > 0 %}
+	#----------------------------------------------------------------------#
+	# DNS listener (v4)                                                    #
+	#----------------------------------------------------------------------#
+
+	listen-on port {{ bind_config_options_dns_listen_on_port }}{% if bind_config_options_dns_listen_on_additional_stanzas %} {{ bind_config_options_dns_listen_on_additional_stanzas }}{% endif %} {
+		{% for item in bind_config_options_dns_listen_on_addresses %}
+		{{ item }};
+		{% endfor %}
+	};
+
+	#----------------------------------------------------------------------#
+	# /DNS listener (v4)                                                   #
+	#----------------------------------------------------------------------#
+	{% endif %}
+
+	{% if bind_config_options_dns_listen_on_v6_addresses | length > 0 %}
+	#----------------------------------------------------------------------#
+	# DNS listener (v6)                                                    #
+	#----------------------------------------------------------------------#
+
+	listen-on-v6 port {{ bind_config_options_dns_listen_on_v6_port }}{% if bind_config_options_dns_listen_on_v6_additional_stanzas %} {{ bind_config_options_dns_listen_on_v6_additional_stanzas }}{% endif %} {
+		{% for item in bind_config_options_dns_listen_on_v6_addresses %}
+		{{ item }};
+		{% endfor %}
+	};
+
+	#----------------------------------------------------------------------#
+	# /DNS listener (v6)                                                   #
+	#----------------------------------------------------------------------#
+	{% endif %}
+
+	{% if bind_config_options_dot_listen_on_enabled and bind_config_options_dot_listen_on_addresses | length > 0 %}
+	#----------------------------------------------------------------------#
+	# DoT listener (v4)                                                    #
+	#----------------------------------------------------------------------#
+
+	listen-on port {{ bind_config_options_dot_listen_on_port }} tls {{ bind_config_options_dot_listen_on_tls_name }}{% if bind_config_options_dot_listen_on_additional_stanzas %} {{ bind_config_options_dot_listen_on_additional_stanzas }}{% endif %} {
+		{% for item in bind_config_options_dot_listen_on_addresses %}
+		{{ item }};
+		{% endfor %}
+	};
+
+	#----------------------------------------------------------------------#
+	# /DoT listener (v4)                                                   #
+	#----------------------------------------------------------------------#
+	{% endif %}
+
+	{% if bind_config_options_dot_listen_on_v6_enabled and bind_config_options_dot_listen_on_v6_addresses | length > 0 %}
+	#----------------------------------------------------------------------#
+	# DoT listener (v6)                                                    #
+	#----------------------------------------------------------------------#
+
+	listen-on-v6 port {{ bind_config_options_dot_listen_on_v6_port }} tls {{ bind_config_options_dot_listen_on_v6_tls_name }}{% if bind_config_options_dot_listen_on_v6_additional_stanzas %} {{ bind_config_options_dot_listen_on_v6_additional_stanzas }}{% endif %} {
+		{% for item in bind_config_options_dot_listen_on_v6_addresses %}
+		{{ item }};
+		{% endfor %}
+	};
+
+	#----------------------------------------------------------------------#
+	# /DoT listener (v6)                                                   #
+	#----------------------------------------------------------------------#
+	{% endif %}
+
+	{% if bind_config_options_doh_listen_on_enabled and bind_config_options_doh_listen_on_addresses | length > 0 %}
+	#----------------------------------------------------------------------#
+	# DoH listener (v4)                                                    #
+	#----------------------------------------------------------------------#
+
+	listen-on port {{ bind_config_options_doh_listen_on_port }} tls {{ bind_config_options_doh_listen_on_tls_name }} http {{ bind_config_options_doh_listen_on_http_endpoint }}{% if bind_config_options_doh_listen_on_additional_stanzas %} {{ bind_config_options_doh_listen_on_additional_stanzas }}{% endif %} {
+		{% for item in bind_config_options_doh_listen_on_addresses %}
+		{{ item }};
+		{% endfor %}
+	};
+
+	#----------------------------------------------------------------------#
+	# /DoH listener (v4)                                                   #
+	#----------------------------------------------------------------------#
+	{% endif %}
+
+	{% if bind_config_options_doh_listen_on_v6_enabled and bind_config_options_doh_listen_on_v6_addresses | length > 0 %}
+	#----------------------------------------------------------------------#
+	# DoH listener (v6)                                                    #
+	#----------------------------------------------------------------------#
+
+	listen-on-v6 port {{ bind_config_options_doh_listen_on_v6_port }} tls {{ bind_config_options_doh_listen_on_v6_tls_name }} http {{ bind_config_options_doh_listen_on_v6_http_endpoint }}{% if bind_config_options_doh_listen_on_v6_additional_stanzas %} {{ bind_config_options_doh_listen_on_v6_additional_stanzas }}{% endif %} {
+		{% for item in bind_config_options_doh_listen_on_v6_addresses %}
+		{{ item }};
+		{% endfor %}
+	};
+
+	#----------------------------------------------------------------------#
+	# /DoH listener (v6)                                                   #
+	#----------------------------------------------------------------------#
+	{% endif %}
+
+	{% if bind_config_options_http_listen_on_enabled and bind_config_options_http_listen_on_addresses | length > 0 %}
+	#----------------------------------------------------------------------#
+	# HTTP listener (v4)                                                   #
+	#----------------------------------------------------------------------#
+
+	listen-on port {{ bind_config_options_http_listen_on_port }} tls {{ bind_config_options_http_listen_on_tls_name }} http {{ bind_config_options_http_listen_on_http_endpoint }}{% if bind_config_options_http_listen_on_additional_stanzas %} {{ bind_config_options_http_listen_on_additional_stanzas }}{% endif %} {
+		{% for item in bind_config_options_http_listen_on_addresses %}
+		{{ item }};
+		{% endfor %}
+	};
+
+	#----------------------------------------------------------------------#
+	# /HTTP listener (v4)                                                  #
+	#----------------------------------------------------------------------#
+	{% endif %}
+
+	{% if bind_config_options_http_listen_on_v6_enabled and bind_config_options_http_listen_on_v6_addresses | length > 0 %}
+	#----------------------------------------------------------------------#
+	# HTTP listener (v6)                                                   #
+	#----------------------------------------------------------------------#
+
+	listen-on-v6 port {{ bind_config_options_http_listen_on_v6_port }} tls {{ bind_config_options_http_listen_on_v6_tls_name }} http {{ bind_config_options_http_listen_on_v6_http_endpoint }}{% if bind_config_options_http_listen_on_v6_additional_stanzas %} {{ bind_config_options_http_listen_on_v6_additional_stanzas }}{% endif %} {
+		{% for item in bind_config_options_http_listen_on_v6_addresses %}
+		{{ item }};
+		{% endfor %}
+	};
+
+	#----------------------------------------------------------------------#
+	# /HTTP listener (v6)                                                  #
+	#----------------------------------------------------------------------#
+	{% endif %}
+
+	{% if bind_config_options_allow_query | length > 0 %}
+	allow-query {
+		{% for item in bind_config_options_allow_query %}
+		{{ item }};
+		{% endfor %}
+	};
+	{% endif %}
+
+	recursion {{ 'yes' if bind_config_options_recursion else 'no' }};
+
+	recursive-clients {{ bind_config_options_recursive_clients }};
+
+	{% if bind_config_options_allow_recursion | length > 0 %}
+	allow-recursion {
+		{% for item in bind_config_options_allow_recursion %}
+		{{ item }};
+		{% endfor %}
+	};
+	{% endif %}
+
+	{% if bind_config_options_allow_transfer | length > 0 %}
+	allow-transfer {
+		{% for item in bind_config_options_allow_transfer %}
+		{{ item }};
+		{% endfor %}
+	};
+	{% endif %}
+
+	{% if bind_config_options_allow_update | length > 0 %}
+	allow-update {
+		{% for item in bind_config_options_allow_update %}
+		{{ item }};
+		{% endfor %}
+	};
+	{% endif %}
+
+	dnssec-validation {{ bind_config_options_dnssec_validation }};
+
+	{% if bind_config_options_notify_source | length > 0 %}
+	notify-source {% for item in bind_config_options_notify_source %}{{ item }}{% if not loop.last %} {% endif %}{% endfor %};
+	{% endif %}
+
+	{% if bind_config_options_notify_source_v6 | length > 0 %}
+	notify-source-v6 {% for item in bind_config_options_notify_source_v6 %}{{ item }}{% if not loop.last %} {% endif %}{% endfor %};
+	{% endif %}
+
+	{% if bind_config_options_transfer_source | length > 0 %}
+	transfer-source {% for item in bind_config_options_transfer_source %}{{ item }}{% if not loop.last %} {% endif %}{% endfor %};
+	{% endif %}
+
+	{% if bind_config_options_transfer_source_v6 | length > 0 %}
+	transfer-source-v6 {% for item in bind_config_options_transfer_source_v6 %}{{ item }}{% if not loop.last %} {% endif %}{% endfor %};
+	{% endif %}
+
+	{% if bind_config_options_query_source | length > 0 %}
+	query-source address {% for item in bind_config_options_query_source %}{{ item }}{% if not loop.last %} {% endif %}{% endfor %};
+	{% endif %}
+
+	{% if bind_config_options_query_source_v6 | length > 0 %}
+	query-source-v6 address {% for item in bind_config_options_query_source_v6 %}{{ item }}{% if not loop.last %} {% endif %}{% endfor %};
+	{% endif %}
+
+	{{ bind_config_options_additional_configuration }}
+};

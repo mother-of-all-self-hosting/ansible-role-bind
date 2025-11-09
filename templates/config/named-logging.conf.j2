@@ -1,0 +1,44 @@
+#jinja2: lstrip_blocks: True
+{% if bind_config_logging_enabled %}
+logging {
+	{% for category_name, category_list in bind_config_logging_categories.items() %}
+	category {{ category_name }} {
+		{% for item in category_list %}
+		{{ item }};
+		{% endfor %}
+	};
+	{% endfor %}
+
+	{% for channel_name, channel_config in bind_config_logging_channels.items() %}
+	channel {{ channel_name }} {
+		{% if channel_config.file is defined %}
+		file "{{ channel_config.file }}"{% if channel_config.versions is defined %} versions {{ channel_config.versions }}{% endif %}{% if channel_config.size is defined %} size {{ channel_config.size }}{% endif %}{% if channel_config.suffix is defined %} suffix {{ channel_config.suffix }}{% endif %};
+		{% endif %}
+		{% if channel_config.syslog is defined %}
+		syslog{% if channel_config.syslog %} {{ channel_config.syslog }}{% endif %};
+		{% endif %}
+		{% if channel_config.null is defined and channel_config.null %}
+		null;
+		{% endif %}
+		{% if channel_config.stderr is defined and channel_config.stderr %}
+		stderr;
+		{% endif %}
+		{% if channel_config.severity is defined %}
+		severity {{ channel_config.severity }};
+		{% endif %}
+		{% if channel_config['print-time'] is defined %}
+		print-time {{ channel_config['print-time'] }};
+		{% endif %}
+		{% if channel_config['print-severity'] is defined %}
+		print-severity {{ channel_config['print-severity'] }};
+		{% endif %}
+		{% if channel_config['print-category'] is defined %}
+		print-category {{ channel_config['print-category'] }};
+		{% endif %}
+		{% if channel_config.buffered is defined %}
+		buffered {{ channel_config.buffered }};
+		{% endif %}
+	};
+	{% endfor %}
+};
+{% endif %}

@@ -1,0 +1,79 @@
+{#
+SPDX-FileCopyrightText: 2024 - 2025 Slavi Pantaleev
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+#}
+
+[Unit]
+Description=BIND ({{ bind_identifier }})
+{% for service in bind_systemd_required_services_list %}
+Requires={{ service }}
+After={{ service }}
+{% endfor %}
+{% for service in bind_systemd_wanted_services_list %}
+Wants={{ service }}
+{% endfor %}
+DefaultDependencies=no
+
+[Service]
+Type=simple
+Environment="HOME={{ devture_systemd_docker_base_systemd_unit_home_path }}"
+ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} stop -t {{ devture_systemd_docker_base_container_stop_grace_time_seconds }} {{ bind_identifier }} 2>/dev/null || true'
+ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ bind_identifier }} 2>/dev/null || true'
+
+ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
+      --rm \
+      --name={{ bind_identifier }} \
+      --log-driver=none \
+      --user={{ bind_uid }}:{{ bind_gid }} \
+      --cap-drop=ALL \
+      --read-only \
+      --network={{ bind_container_network }} \
+      {% if bind_container_dns_udp_bind_port %}
+      -p {{ bind_container_dns_udp_bind_port }}:{{ bind_config_options_dns_listen_on_port }}/udp \
+      {% endif %}
+      {% if bind_container_dns_tcp_bind_port %}
+      -p {{ bind_container_dns_tcp_bind_port }}:{{ bind_config_options_dns_listen_on_port }}/tcp \
+      {% endif %}
+      {% if bind_container_rndc_bind_port %}
+      -p {{ bind_container_rndc_bind_port }}:{{ bind_container_rndc_port }}/tcp \
+      {% endif %}
+      {% if bind_container_dot_tcp_bind_port %}
+      -p {{ bind_container_dot_tcp_bind_port }}:{{ bind_container_dot_port }}/tcp \
+      {% endif %}
+      {% if bind_container_doh_tcp_bind_port %}
+      -p {{ bind_container_doh_tcp_bind_port }}:{{ bind_container_doh_port }}/tcp \
+      {% endif %}
+      {% if bind_container_http_tcp_bind_port %}
+      -p {{ bind_container_http_tcp_bind_port }}:{{ bind_container_http_port }}/tcp \
+      {% endif %}
+      --env-file={{ bind_base_path }}/env \
+      --mount type=bind,src={{ bind_config_path }},dst=/etc/bind,ro \
+      --mount type=bind,src={{ bind_cache_path }},dst=/var/cache/bind \
+      --mount type=bind,src={{ bind_data_path }},dst=/var/lib/bind \
+      {% for volume in bind_container_additional_volumes %}
+      --mount type={{ volume.type | default('bind' if '/' in volume.src else 'volume') }},src={{ volume.src }},dst={{ volume.dst }}{{ (',' + volume.options) if volume.options | default('') else '' }} \
+      {% endfor %}
+      --tmpfs=/run/named:rw,noexec,nosuid,size=10m,uid={{ bind_uid }},gid={{ bind_gid }} \
+      {% for arg in bind_container_extra_arguments %}
+      {{ arg }} \
+      {% endfor %}
+      {{ bind_container_image }} {{ bind_container_process_arguments | join(' ') }}
+
+{% for network in bind_container_additional_networks %}
+ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} network connect {{ network }} {{ bind_identifier }}
+{% endfor %}
+
+ExecStart={{ devture_systemd_docker_base_host_command_docker }} start --attach {{ bind_identifier }}
+
+ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} stop -t {{ devture_systemd_docker_base_container_stop_grace_time_seconds }} {{ bind_identifier }} 2>/dev/null || true'
+ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ bind_identifier }} 2>/dev/null || true'
+
+ExecReload={{ bind_bin_path }}/rndc reload
+
+Restart=always
+RestartSec=30
+SyslogIdentifier={{ bind_identifier }}
+
+[Install]
+WantedBy=multi-user.target

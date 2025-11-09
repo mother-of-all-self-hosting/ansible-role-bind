@@ -1,0 +1,8 @@
+#jinja2: lstrip_blocks: True
+{% for acl_name, acl_entries in bind_config_acl.items() %}
+acl {{ acl_name }} {
+	{% for entry in acl_entries %}
+	{{ entry }};
+	{% endfor %}
+};
+{% endfor %}
