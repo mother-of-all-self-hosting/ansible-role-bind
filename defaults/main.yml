@@ -373,8 +373,9 @@ bind_config_options_allow_transfer: ["none"]
 bind_config_options_allow_update: ["none"]
 
 # Controls the `options.dnssec-validation` configuration property
+# When empty, this setting is omitted from the configuration and the upstream default is used.
 # Ref: https://bind9.readthedocs.io/en/stable/reference.html#namedconf-statement-dnssec-validation
-bind_config_options_dnssec_validation: auto
+bind_config_options_dnssec_validation: ~
 
 # Controls the `options.notify-source` configuration property (IPv4 source address for NOTIFY messages)
 # Ref: https://bind9.readthedocs.io/en/stable/reference.html#namedconf-statement-notify-source

@@ -172,7 +172,9 @@ options {
 	};
 	{% endif %}
 
+	{% if bind_config_options_dnssec_validation %}
 	dnssec-validation {{ bind_config_options_dnssec_validation }};
+	{% endif %}
 
 	{% if bind_config_options_notify_source | length > 0 %}
 	notify-source {% for item in bind_config_options_notify_source %}{{ item }}{% if not loop.last %} {% endif %}{% endfor %};
