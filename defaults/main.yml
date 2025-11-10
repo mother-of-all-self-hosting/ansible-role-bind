@@ -350,8 +350,9 @@ bind_config_options_allow_query: ["any"]
 bind_config_options_recursion: true
 
 # Controls the `options.recursive-clients` configuration property
+# When empty, this setting is omitted from the configuration and the upstream default is used.
 # Ref: https://bind9.readthedocs.io/en/stable/reference.html#namedconf-statement-recursive-clients
-bind_config_options_recursive_clients: 1000
+bind_config_options_recursive_clients: ~
 
 # Controls the `options.allow-recursion` configuration property
 # Only applies if `bind_config_options_recursion` is enabled.

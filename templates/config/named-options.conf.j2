@@ -140,7 +140,9 @@ options {
 
 	recursion {{ 'yes' if bind_config_options_recursion else 'no' }};
 
+	{% if bind_config_options_recursive_clients %}
 	recursive-clients {{ bind_config_options_recursive_clients }};
+	{% endif %}
 
 	{% if bind_config_options_allow_recursion | length > 0 %}
 	allow-recursion {
