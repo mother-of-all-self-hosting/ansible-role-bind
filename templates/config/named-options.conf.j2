@@ -144,6 +144,10 @@ options {
 	recursive-clients {{ bind_config_options_recursive_clients }};
 	{% endif %}
 
+	{% if bind_config_options_tcp_clients %}
+	tcp-clients {{ bind_config_options_tcp_clients }};
+	{% endif %}
+
 	{% if bind_config_options_allow_recursion | length > 0 %}
 	allow-recursion {
 		{% for item in bind_config_options_allow_recursion %}

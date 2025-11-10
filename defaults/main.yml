@@ -354,6 +354,11 @@ bind_config_options_recursion: true
 # Ref: https://bind9.readthedocs.io/en/stable/reference.html#namedconf-statement-recursive-clients
 bind_config_options_recursive_clients: ~
 
+# Controls the `options.tcp-clients` configuration property
+# When empty, this setting is omitted from the configuration and the upstream default is used.
+# Ref: https://bind9.readthedocs.io/en/stable/reference.html#namedconf-statement-tcp-clients
+bind_config_options_tcp_clients: ~
+
 # Controls the `options.allow-recursion` configuration property
 # Only applies if `bind_config_options_recursion` is enabled.
 # Ref: https://bind9.readthedocs.io/en/stable/reference.html#namedconf-statement-allow-recursion
