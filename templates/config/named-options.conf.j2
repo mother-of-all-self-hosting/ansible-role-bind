@@ -2,7 +2,7 @@
 options {
 	directory "{{ bind_config_options_directory }}";
 
-	{% if bind_config_options_dns_listen_on_addresses | length > 0 %}
+	{% if bind_config_options_dns_listen_on_enabled and bind_config_options_dns_listen_on_addresses | length > 0 %}
 	#----------------------------------------------------------------------#
 	# DNS listener (v4)                                                    #
 	#----------------------------------------------------------------------#
@@ -18,7 +18,7 @@ options {
 	#----------------------------------------------------------------------#
 	{% endif %}
 
-	{% if bind_config_options_dns_listen_on_v6_addresses | length > 0 %}
+	{% if bind_config_options_dns_listen_on_v6_enabled and bind_config_options_dns_listen_on_v6_addresses | length > 0 %}
 	#----------------------------------------------------------------------#
 	# DNS listener (v6)                                                    #
 	#----------------------------------------------------------------------#

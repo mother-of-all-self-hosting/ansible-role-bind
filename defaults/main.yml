@@ -180,6 +180,9 @@ bind_config_options_directory: "/var/cache/bind"
 # Options (DNS listener)                                               #
 # -------------------------------------------------------------------- #
 
+# Controls whether the `options.listen-on` directive for DNS is configured.
+bind_config_options_dns_listen_on_enabled: true
+
 # Controls the `options.listen-on` configuration property for DNS (main entry only)
 # Additional listen-on entries can be added via `bind_config_options_additional_configuration`.
 # Ref: https://bind9.readthedocs.io/en/stable/reference.html#namedconf-statement-listen-on
@@ -188,6 +191,9 @@ bind_config_options_dns_listen_on_addresses: ["any"]
 # Additional stanzas to append to the main DNS listen-on entry (e.g., "tls none")
 # Example: bind_config_options_dns_listen_on_additional_stanzas: "tls none"
 bind_config_options_dns_listen_on_additional_stanzas: ''
+
+# Controls whether the `options.listen-on-v6` directive for DNS is configured.
+bind_config_options_dns_listen_on_v6_enabled: "{{ bind_config_options_dns_listen_on_enabled and bind_ipv6_connectivity_enabled }}"
 
 # Controls the `options.listen-on-v6` configuration property for DNS (main entry only)
 # Additional listen-on-v6 entries can be added via `bind_config_options_additional_configuration`.
