@@ -27,6 +27,7 @@
     group: "{{ bind_gid }}"
   with_items:
     - env
+  register: bind_support_files_result
 
 - name: Ensure BIND configuration files installed
   ansible.builtin.template:
@@ -43,6 +44,7 @@
     - named-logging.conf
     - named-options.conf
     - named-zone.conf
+  register: bind_config_files_result
 
 - name: Ensure BIND bin scripts installed
   ansible.builtin.template:
@@ -53,6 +55,7 @@
     group: "{{ bind_gid }}"
   with_items:
     - rndc
+  register: bind_scripts_result
 
 - name: Ensure BIND container image is pulled via community.docker.docker_image
   when: devture_systemd_docker_base_container_image_pull_method == 'ansible-module'
@@ -61,20 +64,20 @@
     source: "{{ 'pull' if ansible_version.major > 2 or ansible_version.minor > 7 else omit }}"
     force_source: "{{ bind_container_image_force_pull if ansible_version.major > 2 or ansible_version.minor >= 8 else omit }}"
     force: "{{ omit if ansible_version.major > 2 or ansible_version.minor >= 8 else bind_container_image_force_pull }}"
-  register: result
+  register: bind_container_image_pull_result
   retries: "{{ devture_playbook_help_container_retries_count }}"
   delay: "{{ devture_playbook_help_container_retries_delay }}"
-  until: result is not failed
+  until: bind_container_image_pull_result is not failed
 
 - name: Ensure BIND container image is pulled via ansible.builtin.command
   when: devture_systemd_docker_base_container_image_pull_method == 'command'
   ansible.builtin.command:
     cmd: "{{ devture_systemd_docker_base_host_command_docker }} pull {{ bind_container_image }}"
-  register: result
+  register: bind_container_image_pull_result
   retries: "{{ devture_playbook_help_container_retries_count }}"
   delay: "{{ devture_playbook_help_container_retries_delay }}"
-  until: result is not failed
-  changed_when: "'Downloaded newer image' in result.stdout"
+  until: bind_container_image_pull_result is not failed
+  changed_when: "'Downloaded newer image' in bind_container_image_pull_result.stdout"
 
 - name: Ensure BIND container network is created via community.docker.docker_network
   when: devture_systemd_docker_base_container_network_creation_method == 'ansible-module'
@@ -102,3 +105,15 @@
     src: "{{ role_path }}/templates/systemd/bind.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/{{ bind_identifier }}.service"
     mode: "0644"
+  register: bind_systemd_service_result
+
+- name: Determine whether BIND needs a restart
+  ansible.builtin.set_fact:
+    bind_restart_necessary: >-
+      {{
+        bind_support_files_result.changed | default(false)
+        or bind_config_files_result.changed | default(false)
+        or bind_scripts_result.changed | default(false)
+        or bind_systemd_service_result.changed | default(false)
+        or bind_container_image_pull_result.changed | default(false)
+      }}
