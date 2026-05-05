@@ -521,7 +521,6 @@ bind_container_image_tag: "{{ bind_version }}"
 bind_container_image_registry_prefix: "{{ bind_container_image_registry_prefix_upstream }}"
 bind_container_image_registry_prefix_upstream: "{{ bind_container_image_registry_prefix_upstream_default }}"
 bind_container_image_registry_prefix_upstream_default: docker.io/
-bind_container_image_force_pull: "{{ bind_container_image.endswith(':latest') }}"
 
 # Specifies how the container publishes its DNS UDP port (see `bind_config_options_listen_on_port`), if needed.
 #
