@@ -68,7 +68,7 @@ bind_config_acl_custom: {}
 #     allow: ["localhost"]
 #     keys: ["rndc-key"]
 #     read_only: false
-bind_config_controls_inet: '{{ bind_config_controls_inet_default + bind_config_controls_inet_auto + bind_config_controls_inet_custom }}'
+bind_config_controls_inet: "{{ bind_config_controls_inet_default + bind_config_controls_inet_auto + bind_config_controls_inet_custom }}"
 bind_config_controls_inet_default: |-
   {{
     (
@@ -106,7 +106,7 @@ bind_config_key_default_rndc_algorithm: hmac-sha512
 # The raw secret (before base64 encoding) for the RNDC key.
 # This will be base64-encoded automatically.
 # Required when bind_config_key_default_rndc_enabled is true.
-bind_config_key_default_rndc_secret_raw: ''
+bind_config_key_default_rndc_secret_raw: ""
 
 # The base64-encoded secret for the RNDC key (computed from the raw secret).
 bind_config_key_default_rndc_secret: "{{ bind_config_key_default_rndc_secret_raw | b64encode if bind_config_key_default_rndc_secret_raw else '' }}"
@@ -190,7 +190,7 @@ bind_config_options_dns_listen_on_port: "{{ bind_container_dns_port }}"
 bind_config_options_dns_listen_on_addresses: ["any"]
 # Additional stanzas to append to the main DNS listen-on entry (e.g., "tls none")
 # Example: bind_config_options_dns_listen_on_additional_stanzas: "tls none"
-bind_config_options_dns_listen_on_additional_stanzas: ''
+bind_config_options_dns_listen_on_additional_stanzas: ""
 
 # Controls whether the `options.listen-on-v6` directive for DNS is configured.
 bind_config_options_dns_listen_on_v6_enabled: "{{ bind_config_options_dns_listen_on_enabled and bind_ipv6_connectivity_enabled }}"
@@ -225,10 +225,10 @@ bind_config_options_dot_listen_on_addresses: ["any"]
 # This refers to a tls block defined in your BIND configuration.
 # Required when bind_config_options_dot_listen_on_enabled is true.
 # Example: bind_config_options_dot_listen_on_tls_name: "myserver"
-bind_config_options_dot_listen_on_tls_name: ''
+bind_config_options_dot_listen_on_tls_name: ""
 # Additional stanzas to append to the DoT listen-on entry (beyond the TLS stanza).
 # Example: bind_config_options_dot_listen_on_additional_stanzas: "some-option"
-bind_config_options_dot_listen_on_additional_stanzas: ''
+bind_config_options_dot_listen_on_additional_stanzas: ""
 
 # Controls whether an additional `options.listen-on-v6` directive for DoT is configured.
 # Automatically enabled when the IPv4 DoT listener is enabled and IPv6 connectivity is enabled.
@@ -264,14 +264,14 @@ bind_config_options_doh_listen_on_addresses: ["any"]
 # This refers to a tls block defined in your BIND configuration.
 # Required when bind_config_options_doh_listen_on_enabled is true.
 # Example: bind_config_options_doh_listen_on_tls_name: "myserver"
-bind_config_options_doh_listen_on_tls_name: ''
+bind_config_options_doh_listen_on_tls_name: ""
 # The HTTP endpoint profile name to use for DoH.
 # This refers to an http block defined in your BIND configuration.
 # Example: bind_config_options_doh_listen_on_http_endpoint: "custom_doh"
 bind_config_options_doh_listen_on_http_endpoint: "default"
 # Additional stanzas to append to the DoH listen-on entry (beyond the TLS and HTTP stanzas).
 # Example: bind_config_options_doh_listen_on_additional_stanzas: "some-option"
-bind_config_options_doh_listen_on_additional_stanzas: ''
+bind_config_options_doh_listen_on_additional_stanzas: ""
 
 # Controls whether an additional `options.listen-on-v6` directive for DoH is configured.
 # Automatically enabled when the IPv4 DoH listener is enabled and IPv6 connectivity is enabled.
@@ -317,7 +317,7 @@ bind_config_options_http_listen_on_tls_name: "none"
 bind_config_options_http_listen_on_http_endpoint: "default"
 # Additional stanzas to append to the HTTP listen-on entry (beyond the TLS and HTTP stanzas).
 # Example: bind_config_options_http_listen_on_additional_stanzas: "some-option"
-bind_config_options_http_listen_on_additional_stanzas: ''
+bind_config_options_http_listen_on_additional_stanzas: ""
 
 # Controls whether an additional `options.listen-on-v6` directive for HTTP is configured.
 # Automatically enabled when the IPv4 HTTP listener is enabled and IPv6 connectivity is enabled.
@@ -352,12 +352,12 @@ bind_config_options_recursion: true
 # Controls the `options.recursive-clients` configuration property
 # When empty, this setting is omitted from the configuration and the upstream default is used.
 # Ref: https://bind9.readthedocs.io/en/stable/reference.html#namedconf-statement-recursive-clients
-bind_config_options_recursive_clients: ~
+bind_config_options_recursive_clients:
 
 # Controls the `options.tcp-clients` configuration property
 # When empty, this setting is omitted from the configuration and the upstream default is used.
 # Ref: https://bind9.readthedocs.io/en/stable/reference.html#namedconf-statement-tcp-clients
-bind_config_options_tcp_clients: ~
+bind_config_options_tcp_clients:
 
 # Controls the `options.allow-recursion` configuration property
 # Only applies if `bind_config_options_recursion` is enabled.
@@ -375,7 +375,7 @@ bind_config_options_allow_update: ["none"]
 # Controls the `options.dnssec-validation` configuration property
 # When empty, this setting is omitted from the configuration and the upstream default is used.
 # Ref: https://bind9.readthedocs.io/en/stable/reference.html#namedconf-statement-dnssec-validation
-bind_config_options_dnssec_validation: ~
+bind_config_options_dnssec_validation:
 
 # Controls the `options.notify-source` configuration property (IPv4 source address for NOTIFY messages)
 # Ref: https://bind9.readthedocs.io/en/stable/reference.html#namedconf-statement-notify-source
@@ -407,7 +407,7 @@ bind_config_options_query_source_v6: "{{ [] if bind_ipv6_connectivity_enabled el
 # bind_config_options_additional_configuration: |
 #   recursion no;
 #   dnssec-validation auto;
-bind_config_options_additional_configuration: ''
+bind_config_options_additional_configuration: ""
 
 # -------------------------------------------------------------------- #
 # /Options                                                             #
@@ -453,7 +453,7 @@ bind_config_zones_custom: {}
 #       type primary;
 #       file "/var/lib/bind/example.com.zone";
 #   };
-bind_config_zones_additional_configuration: ''
+bind_config_zones_additional_configuration: ""
 
 # -------------------------------------------------------------------- #
 # /Zones                                                               #
@@ -468,7 +468,7 @@ bind_config_zones_additional_configuration: ''
 # Example:
 # bind_config_additional_configuration: |
 #   include "/etc/bind/rndc.key";
-bind_config_additional_configuration: ''
+bind_config_additional_configuration: ""
 
 # -------------------------------------------------------------------- #
 # /Additional                                                          #
@@ -526,13 +526,13 @@ bind_container_image_registry_prefix_upstream_default: docker.io/
 #
 # Takes an "<ip>:<port>" value (e.g. "127.0.0.1:53"), just a port number or an empty string to not expose.
 # Empty by default. Users should configure this manually if needed.
-bind_container_dns_udp_bind_port: ''
+bind_container_dns_udp_bind_port: ""
 
 # Specifies how the container publishes its DNS TCP port (see `bind_config_options_listen_on_port`), if needed.
 #
 # Takes an "<ip>:<port>" value (e.g. "127.0.0.1:53"), just a port number or an empty string to not expose.
 # Empty by default. Users should configure this manually if needed.
-bind_container_dns_tcp_bind_port: ''
+bind_container_dns_tcp_bind_port: ""
 
 # Specifies how the container publishes its RNDC control port (see `bind_container_rndc_port`), if needed.
 #
@@ -541,21 +541,21 @@ bind_container_dns_tcp_bind_port: ''
 # For security reasons, it's recommended to only
 # expose this over loopback (127.0.0.1) or not expose it at all.
 # Empty by default. Use `bin/rndc` which invokes `rndc` inside the container for you.
-bind_container_rndc_bind_port: ''
+bind_container_rndc_bind_port: ""
 
 # Specifies how the container publishes its DNS-over-TLS (DoT) TCP port (see `bind_container_dot_port`), if needed.
 #
 # Takes an "<ip>:<port>" value (e.g. "0.0.0.0:853"), just a port number or an empty string to not expose.
 # Empty by default. Users should configure this manually if needed.
 # Note: You also need to configure DoT listeners in BIND configuration.
-bind_container_dot_tcp_bind_port: ''
+bind_container_dot_tcp_bind_port: ""
 
 # Specifies how the container publishes its DNS-over-HTTPS (DoH) TCP port (see `bind_container_doh_port`), if needed.
 #
 # Takes an "<ip>:<port>" value (e.g. "0.0.0.0:443"), just a port number or an empty string to not expose.
 # Empty by default. Users should configure this manually if needed.
 # Note: You also need to configure DoH listeners and HTTP endpoints in BIND configuration.
-bind_container_doh_tcp_bind_port: ''
+bind_container_doh_tcp_bind_port: ""
 
 # Specifies how the container publishes its HTTP TCP port (see `bind_container_http_port`), if needed.
 #
@@ -563,7 +563,7 @@ bind_container_doh_tcp_bind_port: ''
 # Empty by default. Users should configure this manually if needed.
 # This is typically used for DNS-over-HTTPS (DoH) over unencrypted HTTP, often behind a reverse proxy.
 # Note: You also need to enable HTTP listeners via `bind_config_options_http_listen_on_enabled`.
-bind_container_http_tcp_bind_port: ''
+bind_container_http_tcp_bind_port: ""
 
 # The base container network. It will be auto-created by this role if it doesn't exist already.
 bind_container_network: "{{ bind_identifier }}"
@@ -654,7 +654,7 @@ bind_container_cleanup_command: |
   exit 1
 
 # Additional environment variables.
-bind_environment_variables_additional_variables: ''
+bind_environment_variables_additional_variables: ""
 
 # bind_restart_necessary controls whether the BIND systemd
 # service will be restarted (when true) or merely started (when false) by the
