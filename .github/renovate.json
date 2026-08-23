@@ -1,6 +1,14 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "github>mother-of-all-self-hosting/renovate-config#v1.0.0"
+    "github>mother-of-all-self-hosting/renovate-config#v1.0.0",
+    "github>mother-of-all-self-hosting/renovate-config//patch-automerge#v1.0.0"
+  ],
+  "packageRules": [
+    {
+      "description": "BIND's odd-numbered minor versions are development branches (https://kb.isc.org/docs/aa-01540), and this role deliberately tracks stable ones only.",
+      "matchDepNames": ["bind"],
+      "allowedVersions": "/^\\d+\\.\\d*[02468](\\..+)?$/"
+    }
   ]
 }
