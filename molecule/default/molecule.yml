@@ -32,8 +32,13 @@ provisioner:
         bind_debug_service_enabled: false
 
         # Variables for BIND
-        bind_uid: 1000
-        bind_gid: 1000
+        #
+        # The user and group are deliberately left at the role's defaults (53:53)
+        # instead of being overridden. The container image's entrypoint always
+        # execs `named -u bind`, and the container runs with `--cap-drop=ALL`, so
+        # `named` can only complete that `setgid()`/`setuid()` when it is already
+        # running as `bind` (53:53). Any other value makes it exit with
+        # `setgid(): Operation not permitted` before it reads its configuration.
   env:
     # Workaround for https://github.com/ansible/molecule/issues/4391
     ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..:/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:~/.ansible/roles
