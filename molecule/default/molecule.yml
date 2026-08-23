@@ -31,14 +31,58 @@ provisioner:
         # Helper variables
         bind_debug_service_enabled: false
 
+        # The port on the host that BIND answers DNS queries on. Nothing else in
+        # the test container listens on 53 (systemd-resolved is not running
+        # there), so the real DNS port can be used.
+        bind_molecule_dns_bind_port: 53
+
         # Variables for BIND
         #
-        # The user and group are deliberately left at the role's defaults (53:53)
-        # instead of being overridden. The container image's entrypoint always
-        # execs `named -u bind`, and the container runs with `--cap-drop=ALL`, so
-        # `named` can only complete that `setgid()`/`setuid()` when it is already
-        # running as `bind` (53:53). Any other value makes it exit with
-        # `setgid(): Operation not permitted` before it reads its configuration.
+        # The user and group must stay at the role's defaults (53:53). The
+        # container image's entrypoint always execs `named -u bind`, and the
+        # container runs with `--cap-drop=ALL`, so `named` can only complete that
+        # `setgid()`/`setuid()` when it is already running as `bind` (53:53). Any
+        # other value makes it exit with `setgid(): Operation not permitted`
+        # before it reads its configuration. Spelled out here rather than left
+        # implicit, because `prepare.yml` seeds a zone file and needs to give it
+        # the same ownership without being able to see the role's defaults.
+        bind_uid: 53
+        bind_gid: 53
+
+        # Pinned to literal values, because `prepare.yml` seeds a zone file into
+        # the data directory and `verify.yml` invokes the rendered `bin/rndc`
+        # script, and neither can resolve the role's own defaults (which are
+        # derived from other variables).
+        bind_identifier: bind
+        bind_data_path: /bind/data
+        bind_bin_path: /bind/bin
+
+        # The role does not publish any ports by itself (BIND is normally reached
+        # over the container network, or through a host-network deployment), so
+        # the scenario publishes the DNS port to query it from the test container.
+        bind_container_dns_udp_bind_port: "127.0.0.1:{{ bind_molecule_dns_bind_port }}"
+        bind_container_dns_tcp_bind_port: "127.0.0.1:{{ bind_molecule_dns_bind_port }}"
+
+        # Serve a zone authoritatively, so that `verify.yml` can check a real
+        # answer that BIND produces entirely from its own configuration, without
+        # reaching an upstream resolver or the internet. The file below is the
+        # one `prepare.yml` seeds, seen from inside the container.
+        bind_config_zones_custom:
+          molecule.test:
+            type: primary
+            file: /var/lib/bind/molecule.test.zone
+
+        # Deliberately odd, non-default quotas. `verify.yml` asks the running
+        # `named` to report them back, which is what proves that these leaf
+        # variables reached the rendered configuration *and* that the process
+        # actually loaded it - rather than merely that a container is running.
+        bind_config_options_tcp_clients: 137
+        bind_config_options_recursive_clients: 421
+
+        # Enable the RNDC control channel, so that `verify.yml` can exercise it
+        # through the `bin/rndc` script that the role renders.
+        bind_config_key_default_rndc_enabled: true
+        bind_config_key_default_rndc_secret_raw: molecule-rndc-secret
   env:
     # Workaround for https://github.com/ansible/molecule/issues/4391
     ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..:/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:~/.ansible/roles

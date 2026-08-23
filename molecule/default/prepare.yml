@@ -27,3 +27,37 @@
       vars:
         docker_daemon_options:
           storage-driver: vfs
+
+    # This role templates BIND's configuration, but deliberately does not
+    # template zone files - which zones exist and what is in them is a property
+    # of the deployment, not of the role, so users bring their own.
+    #
+    # A BIND that is authoritative for nothing can only be probed for liveness,
+    # and answers every query it is given with REFUSED (recursion is allowed to
+    # nobody by default). Seeding a zone here is what a real deployment ends up
+    # with, and is what lets `verify.yml` ask for an answer that only a BIND
+    # which loaded its configuration can produce.
+    - name: Ensure BIND data directory exists for Molecule tests
+      ansible.builtin.file:
+        path: "{{ bind_data_path }}"
+        state: directory
+        owner: "{{ bind_uid }}"
+        group: "{{ bind_gid }}"
+        mode: "0750"
+
+    - name: Ensure a BIND zone is seeded for Molecule tests
+      ansible.builtin.copy:
+        dest: "{{ bind_data_path }}/molecule.test.zone"
+        owner: "{{ bind_uid }}"
+        group: "{{ bind_gid }}"
+        mode: "0640"
+        # Short TTLs, so that nothing in the test is served from a cache.
+        # `seeded` is the record `verify.yml` asks for; the nameserver address
+        # is deliberately different from it, so that an answer cannot be
+        # confused with the glue record BIND sends alongside it.
+        content: |
+          $TTL 60
+          @        IN SOA  ns.molecule.test. admin.molecule.test. (1 3600 600 86400 60)
+          @        IN NS   ns.molecule.test.
+          ns       IN A    203.0.113.53
+          seeded   IN A    203.0.113.10

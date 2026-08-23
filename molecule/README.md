@@ -47,7 +47,15 @@ Currently there is one testing scenario available.
 
 ### `default`
 
-Tests a standard BIND installation.
+Tests a standard BIND installation serving a zone.
+
+The scenario seeds a `molecule.test` zone containing a distinctive `A` record, configures the role to serve it, and then queries the running BIND over its published DNS port with hand-built DNS packets (the test container ships neither `dig` nor `nslookup`). It checks that:
+
+- the seeded record is answered authoritatively
+- a name absent from that zone gets an authoritative `NXDOMAIN`
+- a name outside every zone is `REFUSED`, since the role allows recursion to nobody by default
+
+It then asks the running `named` for its status over the RNDC control channel — through the `bin/rndc` script that the role renders — and checks that the version it reports and the client quotas it is running with are the ones the role configured.
 
 ## Running
 

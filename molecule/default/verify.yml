@@ -1,14 +1,22 @@
 # SPDX-FileCopyrightText: 2026 Suguru Hirahara
 # SPDX-FileCopyrightText: 2026 spatterlight
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Verify BIND systemd service
+- name: Verify BIND
   hosts: all
   become: true
   gather_facts: false
   tasks:
+    # Role defaults are not in scope here, but the version that Renovate bumps
+    # lives in them and is what the running BIND is checked against below.
+    - name: Load the BIND role defaults
+      ansible.builtin.include_vars:
+        file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
+        name: bind_defaults
+
     - name: Wait for BIND service to become active (up to 180s)
       ansible.builtin.systemd:
         name: bind.service
@@ -29,7 +37,196 @@
         cmd: journalctl -xeu bind.service
       changed_when: false
 
-    - name: Show BIND systemd service status summary
+    # `Restart=always` means a `named` that exits immediately still leaves the
+    # unit cycling between `activating` and `active`, so the container's own
+    # state is checked rather than inferred from systemd.
+    - name: Inspect the BIND container
+      ansible.builtin.command:
+        argv:
+          - docker
+          - inspect
+          - "{{ bind_identifier }}"
+      register: bind_container_inspect
+      changed_when: false
+
+    - name: Assert the BIND container runs the image this role installs
+      ansible.builtin.assert:
+        that:
+          - (bind_container_inspect.stdout | from_json)[0].State.Running | bool
+          - "':' + bind_defaults.bind_version in (bind_container_inspect.stdout | from_json)[0].Config.Image"
+        fail_msg: >-
+          Unexpected BIND container state:
+          running={{ (bind_container_inspect.stdout | from_json)[0].State.Running }}
+          image={{ (bind_container_inspect.stdout | from_json)[0].Config.Image }}
+        success_msg: >-
+          The BIND container runs
+          {{ (bind_container_inspect.stdout | from_json)[0].Config.Image }}
+
+    # Answering a query is the point of this role, and it is what tells a BIND
+    # that loaded its configuration apart from a merely running container.
+    #
+    # Asked with hand-built DNS packets, because the test container ships
+    # neither `dig` nor `nslookup` (and the BIND container ships no `python3`),
+    # over the DNS port that the scenario publishes on the loopback interface.
+    #
+    # Three queries, covering both directions of the role's configuration:
+    #
+    # - `seeded.molecule.test` is in the zone `prepare.yml` seeded, so it must
+    #   be answered from that zone, authoritatively (AA set)
+    # - `absent.molecule.test` is in the same zone but does not exist, so the
+    #   same zone must produce an authoritative NXDOMAIN - which is a different
+    #   thing from BIND not knowing about the zone at all
+    # - `out-of-zone.example.com` is outside every zone BIND serves, and the
+    #   role allows recursion to nobody by default, so it must be REFUSED
+    #   rather than resolved (which also keeps the test off the internet)
+    - name: Query BIND over DNS (up to 60s)
+      ansible.builtin.command:
+        argv:
+          - python3
+          - -c
+          - |
+            import socket
+
+            def query(name, qid):
+                labels = b"".join(
+                    bytes([len(p)]) + p.encode() for p in name.split(".")
+                ) + b"\x00"
+                packet = qid + b"\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00"
+                packet += labels + b"\x00\x01\x00\x01"
+
+                sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                sock.settimeout(5)
+                sock.sendto(packet, ("127.0.0.1", {{ bind_molecule_dns_bind_port }}))
+                response, _ = sock.recvfrom(4096)
+                sock.close()
+
+                flags = int.from_bytes(response[2:4], "big")
+                answers = int.from_bytes(response[6:8], "big")
+
+                # Walks past a name, which is either a sequence of
+                # length-prefixed labels or a compression pointer.
+                def skip_name(offset):
+                    while response[offset]:
+                        if response[offset] & 0xC0 == 0xC0:
+                            return offset + 2
+                        offset += 1 + response[offset]
+                    return offset + 1
+
+                # The answer section has to be parsed properly rather than read
+                # off the end of the packet: an authoritative answer carries
+                # authority and additional sections after it, so the last four
+                # bytes belong to the nameserver's glue record, not the answer.
+                address = "none"
+                if answers:
+                    offset = skip_name(12) + 4
+                    offset = skip_name(offset)
+                    rtype = int.from_bytes(response[offset:offset + 2], "big")
+                    rdlength = int.from_bytes(
+                        response[offset + 8:offset + 10], "big"
+                    )
+                    if rtype == 1 and rdlength == 4:
+                        address = socket.inet_ntoa(
+                            response[offset + 10:offset + 14]
+                        )
+
+                print("name=%s rcode=%d aa=%d answers=%d address=%s" % (
+                    name, flags & 0x0F, (flags >> 10) & 1, answers, address))
+
+            query("seeded.molecule.test", b"\xab\xcd")
+            query("absent.molecule.test", b"\xab\xce")
+            query("out-of-zone.example.com", b"\xab\xcf")
+      register: bind_dns_query
+      changed_when: false
+      until: "'address=203.0.113.10' in bind_dns_query.stdout"
+      retries: 12
+      delay: 5
+
+    - name: Assert BIND answers the seeded record authoritatively
+      ansible.builtin.assert:
+        that:
+          - "'name=seeded.molecule.test rcode=0 aa=1 answers=1 address=203.0.113.10' in bind_dns_query.stdout"
+        fail_msg: "BIND did not answer for the seeded zone ({{ bind_dns_query.stdout }})"
+        success_msg: "BIND answered the seeded record authoritatively"
+
+    - name: Assert BIND is authoritative for names absent from the zone
+      ansible.builtin.assert:
+        that:
+          - "'name=absent.molecule.test rcode=3 aa=1 answers=0' in bind_dns_query.stdout"
+        fail_msg: "BIND did not return an authoritative NXDOMAIN ({{ bind_dns_query.stdout }})"
+        success_msg: "BIND returned an authoritative NXDOMAIN for an absent name"
+
+    - name: Assert BIND refuses queries it is not authoritative for
+      ansible.builtin.assert:
+        that:
+          - "'name=out-of-zone.example.com rcode=5 aa=0 answers=0' in bind_dns_query.stdout"
+        fail_msg: "BIND did not refuse an out-of-zone query ({{ bind_dns_query.stdout }})"
+        success_msg: "BIND refused an out-of-zone query, as configured"
+
+    # Run through the script the role renders, rather than by calling `rndc` in
+    # the container directly: that exercises the control channel *and* the
+    # script itself, which systemd invokes for `ExecReload` and which only
+    # works when its shebang is the first thing in the rendered file.
+    - name: Ask BIND for its status over the RNDC control channel
+      ansible.builtin.command:
+        argv:
+          - "{{ bind_bin_path }}/rndc"
+          - status
+      register: bind_rndc_status
+      changed_when: false
+
+    # `rndc status` reports the version of the process that answered, so this
+    # is the running BIND rather than the binary on disk or the image tag.
+    # BIND reports `BIND 9.20.27 (Stable Release) <id:...>` where the role's
+    # version variable carries only the `9.20` branch, so it is compared as a
+    # prefix - with the trailing dot, so that `9.2` could not pass for `9.20`.
+    - name: Assert the running BIND is the version this role installs
+      ansible.builtin.assert:
+        that: "'version: BIND ' + bind_defaults.bind_version + '.' in bind_rndc_status.stdout"
+        fail_msg: >-
+          The running BIND is not {{ bind_defaults.bind_version }}:
+          {{ bind_rndc_status.stdout_lines | first | default('no output') }}
+        success_msg: "{{ bind_rndc_status.stdout_lines | first }}"
+
+    # The quotas below are set in the scenario's group_vars to deliberately odd
+    # values. Getting them back from the running process traces the whole path:
+    # leaf variable -> rendered named-options.conf -> loaded by `named`.
+    - name: Assert the configured client quotas reached the running BIND
+      ansible.builtin.assert:
+        that:
+          - "'tcp clients: 0/' + (bind_config_options_tcp_clients | string) in bind_rndc_status.stdout"
+          - "'recursive clients: 0/' in bind_rndc_status.stdout"
+          - "'/' + (bind_config_options_recursive_clients | string) in bind_rndc_status.stdout"
+        fail_msg: "The configured client quotas are not in effect: {{ bind_rndc_status.stdout }}"
+        success_msg: >-
+          BIND is running with the configured quotas
+          (tcp-clients {{ bind_config_options_tcp_clients }},
+          recursive-clients {{ bind_config_options_recursive_clients }})
+
+    # A cross-check of the version assert above against the binary in the
+    # image, which is what an image bump actually changes.
+    - name: Ask the BIND binary for its version
+      ansible.builtin.command:
+        argv:
+          - docker
+          - exec
+          - "{{ bind_identifier }}"
+          - named
+          - -v
+      register: bind_named_version
+      changed_when: false
+
+    - name: Assert the BIND binary is the version this role installs
+      ansible.builtin.assert:
+        that: bind_named_version.stdout.startswith('BIND ' + bind_defaults.bind_version + '.')
+        fail_msg: >-
+          The BIND binary reports {{ bind_named_version.stdout }},
+          expected {{ bind_defaults.bind_version }}
+        success_msg: "The BIND binary reports {{ bind_named_version.stdout }}"
+
+    - name: Show BIND verification summary
       ansible.builtin.debug:
         msg:
           - "BIND systemd: {{ bind_service.status.ActiveState }}"
+          - "BIND image: {{ (bind_container_inspect.stdout | from_json)[0].Config.Image }}"
+          - "BIND version: {{ bind_named_version.stdout }}"
+          - "BIND DNS answers: {{ bind_dns_query.stdout_lines }}"
