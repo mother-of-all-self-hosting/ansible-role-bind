@@ -221,10 +221,10 @@
         fail_msg: "BIND binary reports {{ bind_named_version.stdout | default('none') }}, expected {{ bind_defaults.bind_version }}"
         success_msg: "BIND binary reports {{ bind_named_version.stdout }}"
 
-    - name: Show BIND verification summary
+    - name: Show the BIND verification summary
       ansible.builtin.debug:
         msg:
           - "BIND systemd: {{ bind_service.status.ActiveState }}"
-          - "BIND image: {{ (bind_container_inspect.stdout | from_json)[0].Config.Image }}"
           - "BIND version: {{ bind_named_version.stdout }}"
+          - "BIND image: {{ (bind_container_inspect.stdout | from_json)[0].Config.Image }}"
           - "BIND DNS answers: {{ bind_dns_query.stdout_lines }}"
