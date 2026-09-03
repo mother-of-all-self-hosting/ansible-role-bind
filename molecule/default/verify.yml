@@ -215,13 +215,11 @@
       register: bind_named_version
       changed_when: false
 
-    - name: Assert the BIND binary is the version this role installs
+    - name: Assert the running BIND binary is the version this role installs
       ansible.builtin.assert:
         that: bind_named_version.stdout.startswith('BIND ' + bind_defaults.bind_version + '.')
-        fail_msg: >-
-          The BIND binary reports {{ bind_named_version.stdout }},
-          expected {{ bind_defaults.bind_version }}
-        success_msg: "The BIND binary reports {{ bind_named_version.stdout }}"
+        fail_msg: "BIND binary reports {{ bind_named_version.stdout | default('none') }}, expected {{ bind_defaults.bind_version }}"
+        success_msg: "BIND binary reports {{ bind_named_version.stdout }}"
 
     - name: Show BIND verification summary
       ansible.builtin.debug:
