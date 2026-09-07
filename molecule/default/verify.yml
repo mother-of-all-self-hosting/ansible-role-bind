@@ -47,21 +47,21 @@
           - docker
           - inspect
           - "{{ bind_identifier }}"
-      register: bind_container_inspect
+      register: bind_container_raw
       changed_when: false
 
     - name: Assert the BIND container runs the image this role installs
       ansible.builtin.assert:
         that:
-          - (bind_container_inspect.stdout | from_json)[0].State.Running | bool
-          - "':' + bind_defaults.bind_version in (bind_container_inspect.stdout | from_json)[0].Config.Image"
+          - (bind_container_raw.stdout | from_json)[0].State.Running | bool
+          - "':' + bind_defaults.bind_version in (bind_container_raw.stdout | from_json)[0].Config.Image"
         fail_msg: >-
           Unexpected BIND container state:
-          running={{ (bind_container_inspect.stdout | from_json)[0].State.Running }}
-          image={{ (bind_container_inspect.stdout | from_json)[0].Config.Image }}
+          running={{ (bind_container_raw.stdout | from_json)[0].State.Running }}
+          image={{ (bind_container_raw.stdout | from_json)[0].Config.Image }}
         success_msg: >-
           The BIND container runs
-          {{ (bind_container_inspect.stdout | from_json)[0].Config.Image }}
+          {{ (bind_container_raw.stdout | from_json)[0].Config.Image }}
 
     # Answering a query is the point of this role, and it is what tells a BIND
     # that loaded its configuration apart from a merely running container.
@@ -227,5 +227,5 @@
         msg:
           - "BIND systemd: {{ bind_service.status.ActiveState }}"
           - "BIND version: {{ bind_named_version.stdout }}"
-          - "BIND image: {{ (bind_container_inspect.stdout | from_json)[0].Config.Image }}"
+          - "BIND image: {{ (bind_container_raw.stdout | from_json)[0].Config.Image }}"
           - "BIND DNS answers: {{ bind_dns_query.stdout_lines }}"
