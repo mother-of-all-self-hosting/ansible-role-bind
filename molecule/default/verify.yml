@@ -205,7 +205,7 @@
 
     # A cross-check of the version assert above against the binary in the
     # image, which is what an image bump actually changes.
-    - name: Ask the BIND binary for its version
+    - name: Query the version of the running BIND
       ansible.builtin.command:
         argv:
           - docker
