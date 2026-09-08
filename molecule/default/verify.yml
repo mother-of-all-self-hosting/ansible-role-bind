@@ -41,7 +41,7 @@
     - name: Retrieve the BIND systemd service log for debugging
       when: bind_debug_service_enabled | bool
       ansible.builtin.command:
-        cmd: journalctl -xeu bind.service
+        cmd: journalctl --no-pager --output=cat --unit=bind.service
       changed_when: false
 
     # `Restart=always` means a `named` that exits immediately still leaves the
