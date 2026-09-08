@@ -219,19 +219,19 @@
           - "{{ bind_identifier }}"
           - named
           - -v
-      register: bind_named_version
+      register: bind_named_version_reported
       changed_when: false
 
     - name: Assert the running BIND is the version this role installs
       ansible.builtin.assert:
-        that: bind_named_version.stdout.startswith('BIND ' + bind_defaults.bind_version + '.')
-        fail_msg: "BIND reports {{ bind_named_version.stdout | default('none') }}, expected {{ bind_defaults.bind_version }}"
-        success_msg: "BIND reports {{ bind_named_version.stdout }}"
+        that: bind_named_version_reported.stdout.startswith('BIND ' + bind_defaults.bind_version + '.')
+        fail_msg: "BIND reports {{ bind_named_version_reported.stdout | default('none') }}, expected {{ bind_defaults.bind_version }}"
+        success_msg: "BIND reports {{ bind_named_version_reported.stdout }}"
 
     - name: Show the BIND verification summary
       ansible.builtin.debug:
         msg:
           - "BIND systemd: {{ bind_service.status.ActiveState }}"
-          - "BIND version: {{ bind_named_version.stdout }}"
+          - "BIND version: {{ bind_named_version_reported.stdout }}"
           - "BIND image: {{ (bind_container_raw.stdout | from_json)[0].Config.Image }}"
           - "BIND DNS answers: {{ bind_dns_query.stdout_lines }}"
