@@ -49,10 +49,7 @@
     # state is checked rather than inferred from systemd.
     - name: Inspect the BIND container
       ansible.builtin.command:
-        argv:
-          - docker
-          - inspect
-          - "{{ bind_identifier }}"
+        cmd: docker container inspect {{ bind_identifier }}
       register: bind_container_raw
       changed_when: false
 
@@ -213,12 +210,7 @@
     # image, which is what an image bump actually changes.
     - name: Query the version of the running BIND
       ansible.builtin.command:
-        argv:
-          - docker
-          - exec
-          - "{{ bind_identifier }}"
-          - named
-          - -v
+        cmd: docker exec {{ bind_identifier }} named -v
       register: bind_named_version_reported
       changed_when: false
 
