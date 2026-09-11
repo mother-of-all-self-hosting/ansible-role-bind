@@ -9,6 +9,11 @@
   hosts: all
   become: true
   gather_facts: false
+
+  vars:
+    bind_verify_units:
+      - bind.service
+
   tasks:
     - name: Verify that BIND works
       block:
@@ -20,13 +25,14 @@
             file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
             name: bind_defaults
 
-        - name: Wait for the BIND systemd service to become active (up to 180s)
+        - name: Wait for the BIND systemd services to become active (up to 180s each)
           ansible.builtin.systemd_service:
-            name: bind.service
-          register: bind_service
-          until: bind_service.status.ActiveState == 'active'
+            name: "{{ item }}"
+          register: bind_services
+          until: bind_services.status.ActiveState == 'active'
           retries: 36
           delay: 5
+          loop: "{{ bind_verify_units }}"
           # So that giving up is reported by the assertion below rather than as a
           # wall of systemd unit properties.
           failed_when: false
@@ -34,17 +40,20 @@
         # `Restart=always` in the systemd unit means that even a container which crashes
         # and gets restarted reads as active here, so this is a precondition rather than
         # a result.
-        - name: Assert the BIND systemd service is active
+        - name: Assert the BIND systemd services are active
           ansible.builtin.assert:
-            that: bind_service.status.ActiveState == 'active'
-            fail_msg: "bind.service is not active ({{ bind_service.status.ActiveState }})"
-            success_msg: "bind.service is active"
+            that: bind_services.results | map(attribute='status.ActiveState') | unique | list == ['active']
+            fail_msg: >-
+              Not every service is active:
+              {{ dict(bind_verify_units | zip(bind_services.results | map(attribute='status.ActiveState'))) }}
+            success_msg: "Every systemd service is active"
 
-        - name: Retrieve the BIND systemd service log for debugging
+        - name: Retrieve the BIND systemd services log for debugging
           when: bind_debug_service_enabled | bool
           ansible.builtin.command:
-            cmd: journalctl --no-pager --output=cat --unit=bind.service
+            cmd: "journalctl --no-pager --output=cat --unit={{ item }}"
           changed_when: false
+          loop: "{{ bind_verify_units }}"
 
         # `Restart=always` means a `named` that exits immediately still leaves the
         # unit cycling between `activating` and `active`, so the container's own
@@ -225,7 +234,7 @@
         - name: Show the BIND verification summary
           ansible.builtin.debug:
             msg:
-              - "BIND systemd: {{ bind_service.status.ActiveState }}"
+              - "BIND systemd: {% for unit, state in bind_verify_units | zip(bind_services.results | map(attribute='status.ActiveState')) %}{{ unit }} ({{ state }}){% if not loop.last %}, {% endif %}{% endfor %}"
               - "BIND version: {{ bind_named_version_reported.stdout }}"
               - "BIND image: {{ (bind_container_raw.stdout | from_json)[0].Config.Image }}"
               - "BIND DNS answers: {{ bind_dns_query.stdout_lines }}"
