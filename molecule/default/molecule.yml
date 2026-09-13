@@ -31,6 +31,7 @@ provisioner:
       all:
         # Helper variables
         bind_debug_service_enabled: false
+        bind_restarts_check_enabled: true
 
         # The port on the host that BIND answers DNS queries on. Nothing else in
         # the test container listens on 53 (systemd-resolved is not running
