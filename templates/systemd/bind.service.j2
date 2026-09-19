@@ -57,7 +57,10 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       {% for arg in bind_container_extra_arguments %}
       {{ arg }} \
       {% endfor %}
-      {{ bind_container_image }} {{ bind_container_process_arguments | join(' ') }}
+      {{ bind_container_image }} \
+      {% for arg in bind_process_extra_arguments %}
+      {{ arg }} \
+      {% endfor %}
 
 {% for network in bind_container_additional_networks %}
 ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} network connect {{ network }} {{ bind_identifier }}

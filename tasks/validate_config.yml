@@ -10,6 +10,10 @@
       Please change your configuration to rename the variable (`{{ item.old }}` -> `{{ item.new }}`).
   when: "lookup('ansible.builtin.varnames', ('^' + item.old + '$'), wantlist=True) | length > 0"
   with_items:
+    - { "old": "bind_container_process_arguments", "new": "bind_process_extra_arguments" }
+    - { "old": "bind_container_process_arguments_default", "new": "bind_process_extra_arguments_default" }
+    - { "old": "bind_container_process_arguments_auto", "new": "bind_process_extra_arguments_auto" }
+    - { "old": "bind_container_process_arguments_custom", "new": "bind_process_extra_arguments_custom" }
     - { "old": "bind_container_image_force_pull", "new": "<removed> (the new community.docker.docker_image_pull module handles this natively)" }
 
 - name: Fail if required BIND settings not defined

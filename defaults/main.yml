@@ -142,13 +142,14 @@ bind_container_extra_arguments: "{{ bind_container_extra_arguments_auto + bind_c
 bind_container_extra_arguments_auto: []
 bind_container_extra_arguments_custom: []
 
-# A list of extra arguments to pass to the BIND process
-bind_container_process_arguments: "{{ bind_container_process_arguments_default + bind_container_process_arguments_auto + bind_container_process_arguments_custom }}"
-bind_container_process_arguments_default:
+# A list of extra arguments to pass to the process inside the container
+# Example: ['--SOME_ARGUMENT']
+bind_process_extra_arguments: "{{ bind_process_extra_arguments_default + bind_process_extra_arguments_auto + bind_process_extra_arguments_custom }}"
+bind_process_extra_arguments_default:
   - "-c /etc/bind/named.conf"
   - "-g"
-bind_container_process_arguments_auto: []
-bind_container_process_arguments_custom: []
+bind_process_extra_arguments_auto: []
+bind_process_extra_arguments_custom: []
 
 # List of systemd services that BIND systemd service depends on
 bind_systemd_required_services_list: "{{ bind_systemd_required_services_list_default + bind_systemd_required_services_list_auto + bind_systemd_required_services_list_custom }}"
@@ -311,7 +312,7 @@ bind_config_key_custom: {}
 #
 # We disable this by default, because logging configuration is ignored when `named` is started with a `-g` flag
 # and BIND logs directly to the console.
-# We start it with the `-g` flag by default (see `bind_container_process_arguments_default`).
+# We start it with the `-g` flag by default (see `bind_process_extra_arguments_default`).
 bind_config_logging_enabled: false
 
 # Controls the `logging.category` configuration properties.
