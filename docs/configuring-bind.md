@@ -198,7 +198,7 @@ bind_config_zones_custom:
 
 The zone file (`/bind/data/resolver.arpa.zone` on the host; `/var/lib/bind/resolver.arpa.zone` inside the container) could be created using the [Auxiliary](../auxiliary.md) service or another way. It needs to look something like this:
 
-```
+```txt
 $TTL 86400
 @       IN      SOA     ns.example.com. hostmaster.example.com. (
                         2025111101 ; Serial (YYYYMMDDNN)
@@ -223,7 +223,7 @@ _dns    IN      SVCB    2 ns.example.com. alpn="dot" port="853" ipv4hint="1.2.3.
 
 💡 To verify that DDR is working, you can use `dig` like this: `dig @1.2.3.4 _dns.resolver.arpa SVCB +short`. Expect output like this:
 
-```
+```txt
 1 ns.example.com. alpn="h2" port=443 ipv4hint=1.2.3.4 key7="/dns-query{?dns}"
 2 ns.example.com. alpn="dot" port=853 ipv4hint=1.2.3.4
 ```
