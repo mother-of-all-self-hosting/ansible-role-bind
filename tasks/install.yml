@@ -55,7 +55,6 @@
     group: "{{ bind_gid }}"
   with_items:
     - rndc
-  register: bind_scripts_result
 
 - name: Ensure BIND container image is pulled via community.docker.docker_image_pull
   when: devture_systemd_docker_base_container_image_pull_method == 'ansible-module'
@@ -111,7 +110,6 @@
       {{
         bind_support_files_result.changed | default(false)
         or bind_config_files_result.changed | default(false)
-        or bind_scripts_result.changed | default(false)
         or bind_systemd_service_result.changed | default(false)
         or bind_container_image_pull_result_ansible_module.changed | default(false)
         or bind_container_image_pull_result_command.changed | default(false)
